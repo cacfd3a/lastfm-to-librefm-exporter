@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Last.fm exporter / Libre.fm importer</title>
+    <meta name="description" content="Export scrobbled tracks from Last.fm and import them to Libre.fm or Scrobble.fm">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="canonical" href="https://cacfd3a.github.io/lastfm-to-librefm-exporter/"/>
+    <!--<link rel="apple-touch-icon" href="apple-touch-icon.png">-->
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+    <!--<link rel="stylesheet" href="css/mdc.radio.min.css">-->
+    <!--<link rel="stylesheet" href="css/mdc.textfield.min.css">-->
+    <!--<link rel="stylesheet" href="css/mdc.checkbox.min.css">-->
+    <!--<link rel="stylesheet" href="css/mdc.form-field.min.css">-->
+    <!--<link rel="stylesheet" href="css/app.css">-->
+    <!--suppress CssUnusedSymbol -->
+    <style>.github-corner:hover .octo-arm {
+        animation: octocat-wave 560ms ease-in-out
+    }
+
+    @keyframes octocat-wave {
+        0%, 100% {
+            transform: rotate(0)
+        }
+        20%, 60% {
+            transform: rotate(-25deg)
+        }
+        40%, 80% {
+            transform: rotate(10deg)
+        }
+    }
+
+    @media (max-width: 500px) {
+        .github-corner:hover .octo-arm {
+            animation: none
+        }
+
+        .github-corner .octo-arm {
+            animation: octocat-wave 560ms ease-in-out
+        }
+    }
+
+    #app-root {
+        margin: 0 48px;
+    }
+
+    #introduction {
+        margin: 0 48px;
+    }
+
+    .output-json {
+        display: block;
+        width: 100%;
+    }
+
+    .btn-export {
+        margin: 0 0 12px 0;
+    }
+
+    .xsmall {
+        font-size: x-small;
+    }
+
+    .subtitled h2 {
+        margin: 1.5em 0 0 0;
+    }
+
+    .subtitle p {
+        margin: 0;
+    }
+
+    .subtitle {
+        margin: 0 0 1.5em 0;
+    }
+
+    .status {
+        margin: 24px 0 12px 0;
+        background: #eee;
+        padding: 24px 12px;
+        border: 3px double #333;
+        word-break: break-all;
+        line-break: normal;
+        white-space: normal;
+    }
+
+    .status-line-url {
+        color: grey;
+        text-decoration: none;
+        font-size: small;
+    }
+
+    .label-input-empty {
+        font-weight: bold;
+    }
+
+    .api-parameters {
+        display: block;
+        /*display: table;*/
+    }
+
+    .api-parameter {
+        /*display: table-row;*/
+        display: block;
+        /*min-height: 1.4em;*/
+        margin-bottom: 12px;
+    }
+
+    .api-parameter-cell {
+        min-width: 7em;
+        min-height: 1.8em;
+        /*display: table-cell;*/
+        display: inline-block;
+    }
+
+    .api-parameter-label {
+        width: 15em;
+    }
+
+    .api-parameter-input {
+    }
+
+    .frame-output {
+        height: 48px;
+        width: 100%;
+    }
+
+    .btn-authorize-token {
+        margin: 0 0 024px;
+    }
+
+    .btn-big {
+        width: 100%;
+        min-height: 48px;
+    }
+
+    .btn-create-session {
+        /*margin: 24px 0;*/
+    }
+
+    .instruction {
+        font-size: small;
+    }
+
+    .all-set {
+        margin: 24px 0 0 0;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    input {
+        background-color: white;
+    }
+
+    textarea {
+        background-color: white;
+    }
+
+    input[type=submit] {
+        background-color: #eee;
+        border-radius: 0.5em;
+    }
+
+    input[type=checkbox] {
+        background-color: #eee;
+        color: #333;
+    }
+
+    button:hover {
+        background-color: #eee;
+    }
+
+    button {
+        background-color: #fdfdfd;
+        border-radius: 0.5em;
+    }
+
+    input[type=text] {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        border-bottom: #eee 2px solid;
+        background: #f8f8f8;
+        border-radius: 0.5em 0.5em 0.5em 0.5em;
+        padding: 0.4em 0.8em 0.2em 0.8em;
+    }
+
+    input[type=text][disabled] {
+        background: #7e7e7e;
+        border-bottom: #717171 2px solid;
+    }
+
+    input[type=text]:focus {
+        border-bottom: #b9b9b9 2px solid;
+    }
+
+    .btn-side {
+        margin-left: 1em;
+    }
+
+    .output-tall {
+        min-height: 600px;
+    }
+
+    .output-librefm-scrobble {
+        border: 0;
+        height: 96px;
+        display: block;
+        width: 100%;
+        border: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .scrobble-output-holder {
+        display: inline-block;
+        border: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-scrobble-libre {
+        width: 100%;
+    }
+
+    .btn-scrobble-libre {
+        width: 100%;
+        border: none;
+        margin: 0;
+        padding: 12px 0;
+    }
+
+    .btn-close {
+        width: 10%;
+        display: inline-block;
+        /* height: 100%; */
+        top: 0;
+        right: 0;
+        bottom: 0;
+        position: absolute;
+        border: 0;
+        background: #FFF url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTE5LDYuNDFMMTcuNTksNUwxMiwxMC41OUw2LjQxLDVMNSw2LjQxTDEwLjU5LDEyTDUsMTcuNTlMNi40MSwxOUwxMiwxMy40MUwxNy41OSwxOUwxOSwxNy41OUwxMy40MSwxMkwxOSw2LjQxWiIgLz48L3N2Zz4=) no-repeat center;
+    }
+
+    .btn-close:hover {
+        width: 10%;
+        display: inline-block;
+        /* height: 100%; */
+        top: 0;
+        right: 0;
+        bottom: 0;
+        position: absolute;
+        border: 0;
+        background-color: #eee;
+    }
+
+    .scrobble-page-holder {
+        position: relative;
+    }
+
+    label[for=show-output] {
+        font-size: 1.4em;;
+        padding-left: 1em;
+    }
+
+    .warning {
+        color: red;
+        font-weight: bold;
+    }
+
+    .show-output-wrapper {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+
+    #show-output {
+        min-width: 1em;
+        min-height: 1em;
+    }
+
+    .label-input-empty::before, .label-input-set::before {
+        padding-right: 12px;
+        font-family: monospace;
+        font-size: 1.5em;
+        line-height: 48px;
+    }
+
+    .label-input-empty::before {
+        content: '∗';
+    }
+
+    .label-input-set::before {
+        color: #388e3c;
+        content: '✓';
+    }
+
+    footer {
+        width: 100%;
+        background-color: #eee;
+        font-size: small;
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 24px;
+        padding-bottom: 24px;
+    }
+
+    a {
+        word-break: break-all;
+    }
+
+    @media only screen and (max-width: 768px) {
+        #app-root {
+            margin: 0 24px;
+        }
+
+        #introduction {
+            margin: 0 24px;
+        }
+    }
+
+    @media only screen and (max-width: 768px) {
+        #app-root {
+            margin: 0 24px;
+        }
+
+        #introduction {
+            margin: 0 24px;
+        }
+    }
+
+    @media only screen and (max-width: 480px) {
+        #app-root {
+            margin: 0 8px;
+        }
+
+        #introduction {
+            margin: 0 8px;
+        }
+    }
+    </style>
+</head>
+<body>
+<!--[if lt IE 8]>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade
+    your browser</a> to improve your experience.</p>
+<![endif]-->
+<section id="introduction"><h1>Last.fm exporter / Libre.fm importer</h1>
+</section>
+<a href="https://github.com/cacfd3a/lastfm-to-librefm-exporter" class="github-corner">
+    <svg width="80" height="80" viewBox="0 0 250 250"
+         style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
+              fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
+              fill="currentColor" class="octo-body"/>
+    </svg>
+</a>
+<div id="mount-point">
+    <p>Export tracks from <a href="https://www.last.fm">Last.fm</a> and import them to <a
+            href="https://libre.fm">Libre.fm</a>. If you encounter any problems, <a
+            href="https://github.com/cacfd3a/lastfm-to-librefm-exporter/issues/new">leave a note</a>.</p>
+    <section><h2>Last.fm parameters</h2>
+        <div class="api-parameters">
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-empty"
+                                              for="dummy-username-lastfm">Username</label><input
+                    disabled
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-username-lastfm" type="text"
+                    name="dummy-username-lastfm" value=""><a class="hidden api-parameter-cell xsmall"
+                                                             href="">Profile</a></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-key-lastfm">API key</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-key-lastfm" type="text"
+                    name="dummy-api-key-lastfm" value=""><a class="api-parameter-cell xsmall"
+                                                            href="https://www.last.fm/api/account/create">Request API
+                key</a></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-method-lastfm">API method</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-method-lastfm"
+                    type="text"
+                    name="dummy-api-method-lastfm" value="user.getrecenttracks"></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-startpage-lastfm2">startpage</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-startpage-lastfm2"
+                    type="text"
+                    name="dummy-api-startpage-lastfm" value="1"></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-lastpage-lastfm2">lastpage</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-lastpage-lastfm2"
+                    type="text"
+                    name="dummy-api-lastpage-lastfm" value=""></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-results-per-page-lastfm">Results per page (max
+                200)</label><input class="mdc-text-field api-parameter-cell api-parameter-input"
+                                   id="dummy-api-results-per-page-lastfm" type="text"
+                                   name="dummy-api-results-per-page-lastfm" value="200"></div>
+        </div>
+        <div class="all-set hidden">✓ All Last.fm settings set</div>
+    </section>
+    <section><h2>Libre.fm settings</h2>
+        <div class="api-parameters">
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-key-libre">API key</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-key-libre" type="text"
+                    name="dummy-api-key-libre" disabled value=""></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-secret-libre">Secret</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-secret-libre"
+                    type="text"
+                    name="dummy-api-secret-libre" disabled value=""></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-token-libre">Token</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-token-libre" type="text"
+                    name="dummy-api-token-libre" value="">
+                <form action="https://libre.fm/2.0/" class="api-parameter-cell" target="myFrame" method="post">
+                    <input type="hidden" name="dummy-method" value="auth.getToken"><input type="hidden"
+                                                                                          name="dummy-api_key"
+                                                                                          value=""><input
+                        type="hidden" name="dummy-format" value="json"><input type="hidden" name="dummy-api_sig"
+                                                                              value=""><input
+                        type="submit" value="Create token"></form>
+            </div>
+            <div class="api-parameter"><span class="instruction hidden">Copy the token into the above field. So if the response is <code>{"token": "xyz"}</code>, copy <em>xyz</em> without the quotes.</span>
+            </div>
+            <div class="api-parameter">
+                <iframe name="dummy-myFrame" id="dummy-myFrame" class="frame-output api-parameter-cell hidden"></iframe>
+            </div>
+            <div class="api-parameter">
+                <form action="https://libre.fm/api/auth/" class="visible" target="_blank" method="post"><input
+                        type="hidden" name="dummy-api_key" value="r9i1y91hz71tcx7vyrp9hk1alhqp1888"><input type="hidden"
+                                                                                                           name="dummy-token"
+                                                                                                           value="1321321"><input
+                        class="btn-authorize-token btn-big" type="submit"
+                        value="Authorize this token to change your account"></form>
+            </div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-username-libre">Username</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-username-libre"
+                    type="text"
+                    name="dummy-api-username-libre" disabled value=""><a class="visible api-parameter-cell xsmall"
+                                                                         href="">Profile</a>
+            </div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-sk-libre">Session key</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-sk-libre" type="text"
+                    name="dummy-api-sk-libre" disabled value="">
+                <form action="https://libre.fm/2.0/" class="api-parameter-cell visible" target="get-session-output"
+                      method="post"><input type="hidden" name="dummy-method" value="auth.getSession"><input
+                        type="hidden"
+                        name="dummy-api_key"
+                        value="r9i1y91hz71tcx7vyrp9hk1alhqp1888"><input
+                        type="hidden" name="dummy-token" value="1321321"><input type="hidden" name="dummy-format"
+                                                                                value="json"><input type="hidden"
+                                                                                                    name="dummy-api_sig"
+                                                                                                    value="0820d33fe823b790bccdf81def421dd5"><input
+                        class="btn-create-session" type="submit" value="Create session key"></form>
+                <div class="api-parameter"><span class="instruction hidden">Copy the username and session key into the above field. So if the response is {"key": "xyz"}, copy <em>xyz</em> without the quotes.</span>
+                </div>
+                <iframe name="dummy-get-session-output" class="frame-output hidden"></iframe>
+            </div>
+        </div>
+    </section>
+    <section id="dummy-synchronize-scrobbles" class="subtitled"><h2>Synchronize Last.fm scrobbles to Libre.fm</h2>
+        <div class="xsmall subtitle"><p>Scroll down the status windows to see if the scrobbles were succesful. Look
+            for something like: <code>"@attr":{"accepted":"x","ignored":"y"}}}</code></p>
+            <p>You do not need to worry about tracks being scrobbled more than once. Duplicates are ignored
+                automatically.</p></div>
+        <div class="api-parameters">
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-startpage-lastfm">Start on Last.fm 'Recently Listened'
+                page</label><input class="mdc-text-field api-parameter-cell api-parameter-input"
+                                   id="dummy-api-startpage-lastfm" type="text"
+                                   name="dummy-api-startpage-lastfm" value="1"></div>
+            <div class="api-parameter"><label class="api-parameter-cell api-parameter-label label-input-set"
+                                              for="dummy-api-lastpage-lastfm">End on page (optional)</label><input
+                    class="mdc-text-field api-parameter-cell api-parameter-input" id="dummy-api-lastpage-lastfm"
+                    type="text"
+                    name="dummy-api-lastpage-lastfm" value=""></div>
+        </div>
+        <button>Synchronize Last.fm scrobbles to Libre.fm</button>
+    </section>
+    <section><h2>Last.fm export only</h2>
+        <button class="btn-export btn-big">Export Last.fm scrobbles</button>
+        <div><input type="checkbox" name="dummy-show-output" id="dummy-show-output" checked=""><label
+                for="dummy-show-output">Show
+            output</label></div>
+    </section>
+</div>
+<footer>
+    This web app was made by <a href="https://github.com/cacfd3a">cacfd3a</a><br/>
+    Source code licensed under <a
+        href="https://github.com/cacfd3a/lastfm-to-librefm-exporter/blob/gh-pages/LICENSE">GPLv3</a>
+</footer>
+<script async src="js/app.js"></script>
+<!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+<!--<script>-->
+<!--(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=-->
+<!--function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;-->
+<!--e=o.createElement(i);r=o.getElementsByTagName(i)[0];-->
+<!--e.src='https://www.google-analytics.com/analytics.js';-->
+<!--r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));-->
+<!--ga('create','UA-XXXXX-X','auto');ga('send','pageview');-->
+<!--</script>-->
+</body>
+</html>
